@@ -9,6 +9,16 @@
         "reseau": 172.1,
         "autoconso": 136.4
       }
+    },
+    "2026": {
+      "5": {
+        "production": 460,
+        "consumption": 0,
+        "chargeBatt": 0,
+        "dechargeBatt": 0,
+        "reseau": 0,
+        "autoconso": 0
+      }
     }
   },
   "daily": {
@@ -35,5 +45,5 @@
     "prix": 0.18,
     "rachat": 0.13
   },
-  "updated": "2026-06-10T17:14:31.434Z"
+  "updated": "2026-06-10T18:06:07.564Z"
 }
