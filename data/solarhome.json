@@ -36,10 +36,10 @@
     }
   ],
   "battCfg": {
-    "capacity": 500,
+    "capacity": 1200,
     "alert": 50,
     "prix": 0.18,
     "rachat": 0.13
   },
-  "updated": "2026-06-10T16:59:58.108Z"
+  "updated": "2026-06-10T17:03:12.841Z"
 }
