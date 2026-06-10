@@ -546,7 +546,14 @@ function render(){
   MS.forEach((m,i)=>{
     const d=(monthly[cy()]||{})[i];
     if(!d){
-      mHTML+="<div style='"+gs6+"'><div class='td' style='color:"+MUTED+"'>"+m+"</div>"+"<div class='td' style='color:"+BORDER+"'>-</div>".repeat(5)+"</div>";
+      mHTML+="<div style='"+gs6+"'>"
+        +"<div class='td' style='color:"+MUTED+"'>"+m+"</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"</div>";
     } else {
       const bal=((d.production||0)-(d.consumption||0));
       const balColor=bal>=0?MINT:RED;
