@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SolarHome</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',sans-serif}
+body{background:linear-gradient(160deg,#FFF9E6,#F0F7FF,#F0FFF8);min-height:100vh;color:#1E293B}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+.hidden{display:none !important}
+.card{background:#fff;border-radius:20px;padding:18px;border:1.5px solid #E2EAF4}
+.card-mint{background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border:1.5px solid #10B98133}
+.card-sun{background:linear-gradient(135deg,#FFF9E6,#FFF3CC);border:1.5px solid #FFB80033}
+.shadow{box-shadow:0 8px 32px rgba(0,0,0,0.08)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.flex{display:flex;align-items:center}
+.btn{border:none;border-radius:10px;color:#fff;padding:8px 12px;cursor:pointer;font-weight:700;font-size:11px;white-space:nowrap}
+.btn-save{width:100%;padding:13px;border:none;border-radius:14px;color:#fff;font-weight:800;font-size:14px;cursor:pointer;margin-top:4px}
+.nav-btn{padding:8px 14px;border-radius:12px;border:none;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;transition:all 0.2s}
+.pill{padding:6px 16px;border-radius:99px;cursor:pointer;font-size:12px;font-weight:700;border:2px solid #E2EAF4;background:transparent;color:#64748B;transition:all 0.2s}
+.lbl{font-size:10px;font-weight:700;color:#64748B;text-transform:uppercase;margin-bottom:6px;display:block}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:24px;padding:24px;width:100%;max-width:420px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.18)}
+.iw{margin-bottom:10px}
+.ir{display:flex;align-items:center;background:#F0F7FF;border:1.5px solid #E2EAF4;border-radius:10px;overflow:hidden}
+.ir input,.ir select{flex:1;background:transparent;border:none;color:#1E293B;padding:10px 12px;font-size:14px;font-weight:600;outline:none;width:100%}
+.iu{padding:0 12px;color:#FFB800;font-weight:800;font-size:11px;border-left:1.5px solid #E2EAF4;white-space:nowrap}
+.th{padding:7px 8px;font-size:9px;font-weight:700;color:#64748B;text-transform:uppercase;background:#F0F7FF}
+.td{padding:7px 8px;border-top:1px solid #E2EAF4;font-size:11px;font-weight:600}
+.sep{height:1px;background:#E2EAF4;margin:12px 0}
+.stitle{font-size:10px;font-weight:800;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div style="background:#fff;border-bottom:1.5px solid #E2EAF4;padding:12px 16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,0,0,0.05)">
+  <div class="flex" style="justify-content:space-between;margin-bottom:10px">
+    <div class="flex" style="gap:10px">
+      <div style="width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#FFB800,#FF7A1A);display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff">*</div>
+      <div>
+        <div style="font-weight:800;font-size:1rem;color:#1E293B">SolarHome</div>
+        <div id="today-date" style="font-size:10px;color:#64748B"></div>
+        <div id="sync-status" style="font-size:9px;font-weight:700;color:#10B981"></div>
+      </div>
+    </div>
+    <div class="flex" style="gap:5px;flex-wrap:wrap;justify-content:flex-end">
+      <button class="btn" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED)" onclick="openModal('photo')">Photo</button>
+      <button class="btn" style="background:linear-gradient(135deg,#FFB800,#FF7A1A)" onclick="openModal('data')">+ Donnees</button>
+      <button class="btn" style="background:linear-gradient(135deg,#10B981,#059669)" onclick="openModal('batt')">Batterie</button>
+      <button class="btn" style="background:linear-gradient(135deg,#0EA5E9,#0284C7)" onclick="exportExcel()">Excel</button>
+      <button class="btn" style="background:linear-gradient(135deg,#64748B,#475569)" onclick="exportPDF()">PDF</button>
+    </div>
+  </div>
+  <div class="flex" style="gap:6px;overflow-x:auto;padding-bottom:2px">
+    <button id="nav-dash"    class="nav-btn" onclick="setView('dash')">Accueil</button>
+    <button id="nav-history" class="nav-btn" onclick="setView('history')">Historique</button>
+    <button id="nav-battery" class="nav-btn" onclick="setView('battery')" style="position:relative">Batterie
+      <span id="batt-dot" class="hidden" style="position:absolute;top:-4px;right:-4px;width:9px;height:9px;background:#F43F5E;border-radius:50%;border:2px solid #fff"></span>
+    </button>
+  </div>
+</div>
+
+<div id="alert-bar" class="hidden" style="margin:14px 18px 0;background:#FFF1F2;border:1.5px solid #F43F5E44;border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+  <span style="font-weight:800;color:#F43F5E;font-size:18px">!</span>
+  <div>
+    <div style="font-weight:700;font-size:13px;color:#F43F5E">Batterie virtuelle faible</div>
+    <div id="alert-text" style="font-size:11px;color:#64748B;margin-top:2px"></div>
+  </div>
+</div>
+
+<!-- ACCUEIL -->
+<div id="view-dash" style="padding:14px 18px 32px;display:flex;flex-direction:column;gap:12px">
+  <div style="border-radius:24px;background:linear-gradient(135deg,#FFB800,#FF7A1A);padding:20px;box-shadow:0 16px 48px #FFB80044">
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;margin-bottom:6px">Puissance instantanee</div>
+    <div class="flex" style="align-items:baseline;gap:6px;margin-bottom:12px">
+      <span id="rt-prod" style="font-weight:800;font-size:3rem;color:#fff;line-height:1">0.000</span>
+      <span style="font-weight:700;font-size:1.1rem;color:rgba(255,255,255,0.7)">kW</span>
+    </div>
+    <div class="g3">
+      <div style="background:rgba(255,255,255,0.2);border-radius:12px;padding:8px 10px">
+        <div style="font-size:9px;color:rgba(255,255,255,0.7);font-weight:700;margin-bottom:3px">Batterie</div>
+        <div id="rt-batt" style="font-weight:800;font-size:12px;color:#fff">0.000 kW</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.2);border-radius:12px;padding:8px 10px">
+        <div style="font-size:9px;color:rgba(255,255,255,0.7);font-weight:700;margin-bottom:3px">Maison</div>
+        <div id="rt-home" style="font-weight:800;font-size:12px;color:#fff">0.000 kW</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.2);border-radius:12px;padding:8px 10px">
+        <div style="font-size:9px;color:rgba(255,255,255,0.7);font-weight:700;margin-bottom:3px">Reseau</div>
+        <div id="rt-grid" style="font-weight:800;font-size:12px;color:#fff">0.000 kW</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-size:10px;color:rgba(255,255,255,0.7)">SIMULATION - MaJ 5min</div>
+  </div>
+
+  <div class="g2">
+    <div class="card shadow" style="border-color:#38BDF833">
+      <span class="lbl">Aujourd'hui</span>
+      <div id="d-tod-prod" style="font-weight:800;font-size:2rem;color:#38BDF8;line-height:1">0.00 <span style="font-size:0.65rem;color:#38BDF888">kWh</span></div>
+      <div id="d-tod-sub" style="margin-top:6px;font-size:11px;color:#64748B"></div>
+    </div>
+    <div class="card shadow" style="border-color:#8B5CF633">
+      <span id="d-month-lbl" class="lbl"></span>
+      <div id="d-month-prod" style="font-weight:800;font-size:2rem;color:#8B5CF6;line-height:1">0 <span style="font-size:0.65rem;color:#8B5CF688">kWh</span></div>
+      <div id="d-month-sub" style="margin-top:6px;font-size:11px;color:#64748B"></div>
+    </div>
+  </div>
+
+  <div class="card card-mint shadow" style="cursor:pointer" onclick="setView('battery')">
+    <div class="flex" style="gap:16px">
+      <div id="batt-gauge-dash"></div>
+      <div style="flex:1">
+        <span class="lbl" style="color:#10B981">Batterie Virtuelle MySmart</span>
+        <div class="g2" style="gap:8px">
+          <div style="background:#F0F7FF;border-radius:10px;padding:8px 10px">
+            <div style="font-size:9px;font-weight:700;color:#64748B;text-transform:uppercase;margin-bottom:3px">Charge</div>
+            <div id="batt-mini-ch" style="font-weight:800;font-size:13px;color:#10B981"></div>
+          </div>
+          <div style="background:#F0F7FF;border-radius:10px;padding:8px 10px">
+            <div style="font-size:9px;font-weight:700;color:#64748B;text-transform:uppercase;margin-bottom:3px">Economies</div>
+            <div id="batt-mini-ec" style="font-weight:800;font-size:13px;color:#FFB800"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card" style="border-color:#10B98133">
+      <span class="lbl">Auto-conso</span>
+      <div id="d-self" style="font-weight:800;font-size:2.2rem;color:#10B981;line-height:1">0<span style="font-size:0.8rem;color:#10B98188">%</span></div>
+      <div style="margin-top:10px;height:6px;border-radius:99px;background:#E2EAF4;overflow:hidden">
+        <div id="self-bar" style="height:100%;background:linear-gradient(90deg,#6EE7B7,#10B981);border-radius:99px;width:0%;transition:width 1s"></div>
+      </div>
+    </div>
+    <div class="card card-sun shadow">
+      <span class="lbl" style="color:#FF7A1A">Economies</span>
+      <div id="d-savm" style="font-weight:800;font-size:1.6rem;color:#FFB800;line-height:1">0 <span style="font-size:0.65rem">EUR/mois</span></div>
+      <div id="d-savy" style="margin-top:4px;font-weight:700;font-size:13px;color:#FF7A1A"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="flex" style="justify-content:space-between;margin-bottom:12px">
+      <div style="font-weight:700;font-size:13px;color:#1E293B">30 derniers jours</div>
+      <div class="flex" style="gap:10px">
+        <div class="flex" style="gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:#FFB800"></div><span style="font-size:10px;font-weight:600;color:#64748B">Prod.</span></div>
+        <div class="flex" style="gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:#38BDF8"></div><span style="font-size:10px;font-weight:600;color:#64748B">Conso.</span></div>
+      </div>
+    </div>
+    <canvas id="chart-30" style="width:100%;display:block" height="140"></canvas>
+  </div>
+
+  <div id="dash-mylight" style="background:linear-gradient(135deg,#F5F3FF,#EDE9FE);border:1.5px solid #8B5CF633;border-radius:20px;padding:18px">
+    <span class="lbl" style="color:#8B5CF6">Detail Mylight - Aujourd'hui</span>
+    <div class="g2" id="d-mylight-today" style="gap:8px"></div>
+  </div>
+
+  <div style="background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border:1.5px solid #10B98144;border-radius:18px;padding:14px 18px;display:flex;align-items:center;gap:14px">
+    <div style="width:36px;height:36px;border-radius:99px;background:#10B98122;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#10B981">+</div>
+    <div>
+      <div id="co2-txt" style="font-weight:800;font-size:14px;color:#10B981"></div>
+      <div id="co2-sub" style="font-size:11px;color:#64748B;margin-top:3px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORIQUE -->
+<div id="view-history" class="hidden" style="padding:14px 18px 32px;display:flex;flex-direction:column;gap:12px">
+  <div class="flex" style="gap:8px">
+    <button id="pill-monthly" class="pill" onclick="setHS('monthly')">Mensuel</button>
+    <button id="pill-daily"   class="pill" onclick="setHS('daily')">Journalier</button>
+    <button id="pill-yearly"  class="pill" onclick="setHS('yearly')">Annuel</button>
+  </div>
+
+  <!-- Mensuel -->
+  <div id="hs-monthly">
+    <div class="card" style="margin-bottom:12px">
+      <div id="h-month-lbl" style="font-weight:700;font-size:13px;color:#1E293B;margin-bottom:10px"></div>
+      <div class="flex" style="gap:10px;margin-bottom:8px">
+        <div class="flex" style="gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:#FFB800"></div><span style="font-size:10px;font-weight:600;color:#64748B">Prod.</span></div>
+        <div class="flex" style="gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:#38BDF8"></div><span style="font-size:10px;font-weight:600;color:#64748B">Conso.</span></div>
+      </div>
+      <canvas id="chart-monthly" style="width:100%;display:block" height="150"></canvas>
+    </div>
+    <div class="card">
+      <div style="font-weight:700;font-size:13px;color:#1E293B;margin-bottom:12px">Detail mensuel (cliquer pour modifier)</div>
+      <div style="border-radius:12px;overflow:hidden;border:1.5px solid #E2EAF4">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;background:#F0F7FF">
+          <div class="th">Mois</div><div class="th">Prod.</div><div class="th">Conso.</div><div class="th">Ch.Batt</div><div class="th">De.Batt</div><div class="th">Bilan</div>
+        </div>
+        <div id="monthly-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Journalier -->
+  <div id="hs-daily" class="hidden">
+    <div class="card">
+      <div style="font-weight:700;font-size:13px;color:#1E293B;margin-bottom:12px">Donnees journalieres (cliquer pour modifier)</div>
+      <div class="g2" style="gap:8px;margin-bottom:12px">
+        <div>
+          <label class="lbl">Mois</label>
+          <div class="ir"><select id="daily-month-sel" onchange="renderDailyTable()" style="flex:1;background:transparent;border:none;color:#1E293B;padding:10px 12px;font-size:14px;outline:none"></select></div>
+        </div>
+        <div>
+          <label class="lbl">Annee</label>
+          <div class="ir"><select id="daily-year-sel" onchange="renderDailyTable()" style="flex:1;background:transparent;border:none;color:#1E293B;padding:10px 12px;font-size:14px;outline:none"></select></div>
+        </div>
+      </div>
+      <div style="border-radius:12px;overflow:hidden;border:1.5px solid #E2EAF4">
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr 1fr;background:#F0F7FF">
+          <div class="th">Date</div><div class="th">Prod.</div><div class="th">Conso.</div><div class="th">Ch.Batt</div><div class="th">De.Batt</div><div class="th">Reseau</div><div class="th">Auto.</div>
+        </div>
+        <div id="daily-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annuel -->
+  <div id="hs-yearly" class="hidden"></div>
+</div>
+
+<!-- BATTERIE -->
+<div id="view-battery" class="hidden" style="padding:14px 18px 32px;display:flex;flex-direction:column;gap:12px">
+  <div class="flex" style="justify-content:flex-end">
+    <button onclick="openModal('cfg')" style="background:#F0F7FF;border:1.5px solid #E2EAF4;border-radius:10px;color:#64748B;padding:7px 14px;cursor:pointer;font-weight:700;font-size:11px">Configurer</button>
+  </div>
+  <div class="card card-mint shadow">
+    <span class="lbl" style="color:#10B981">Batterie Virtuelle MySmart Battery</span>
+    <div class="flex" style="gap:20px">
+      <div id="batt-gauge-main"></div>
+      <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px" id="batt-details"></div>
+    </div>
+  </div>
+  <div class="card card-sun shadow">
+    <span class="lbl" style="color:#FF7A1A">Economies generees</span>
+    <div class="g3" id="batt-econ"></div>
+  </div>
+  <div class="card">
+    <div style="font-weight:700;font-size:13px;color:#1E293B;margin-bottom:10px">Charge et Decharge (30 jours)</div>
+    <div class="flex" style="gap:10px;margin-bottom:8px">
+      <div class="flex" style="gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:#10B981"></div><span style="font-size:10px;font-weight:600;color:#64748B">Charge</span></div>
+      <div class="flex" style="gap:5px"><div style="width:10px;height:10px;border-radius:3px;background:#F43F5E"></div><span style="font-size:10px;font-weight:600;color:#64748B">Decharge</span></div>
+    </div>
+    <canvas id="chart-batt" style="width:100%;display:block" height="110"></canvas>
+  </div>
+</div>
+
+<!-- MODAL DONNEES -->
+<div id="modal-data" class="overlay hidden">
+  <div class="modal">
+    <div class="flex" style="justify-content:space-between;margin-bottom:18px">
+      <h2 style="font-size:1rem;font-weight:800;color:#1E293B">Saisir des donnees</h2>
+      <button onclick="closeModal('data')" style="background:#F0F7FF;border:none;color:#64748B;border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:16px">x</button>
+    </div>
+    <div class="flex" style="gap:8px;margin-bottom:14px">
+      <button id="tab-daily"   onclick="setTab('daily')"   style="flex:1;padding:9px;border-radius:10px;border:2px solid #FFB800;background:#FFB80018;color:#FFB800;font-weight:700;cursor:pointer;font-size:12px">Journalier</button>
+      <button id="tab-monthly" onclick="setTab('monthly')" style="flex:1;padding:9px;border-radius:10px;border:2px solid #E2EAF4;background:#fff;color:#64748B;font-weight:700;cursor:pointer;font-size:12px">Mensuel</button>
+    </div>
+    <div id="inp-date-wrap" class="iw">
+      <label class="lbl">Date</label>
+      <div class="ir"><input type="date" id="inp-date"></div>
+    </div>
+    <div id="inp-month-wrap" class="iw hidden">
+      <div class="g2" style="gap:8px">
+        <div>
+          <label class="lbl">Mois</label>
+          <div class="ir"><select id="inp-month"></select></div>
+        </div>
+        <div>
+          <label class="lbl">Annee</label>
+          <div class="ir"><select id="inp-year"></select></div>
+        </div>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="stitle">Production & Consommation</div>
+    <div class="g2" style="gap:8px;margin-bottom:8px">
+      <div class="iw">
+        <label class="lbl">Production</label>
+        <div class="ir"><input type="number" id="inp-prod" min="0" step="0.01" placeholder="0.00"><span class="iu">kWh</span></div>
+      </div>
+      <div class="iw">
+        <label class="lbl">Conso totale</label>
+        <div class="ir"><input type="number" id="inp-cons" min="0" step="0.01" placeholder="0.00"><span class="iu">kWh</span></div>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="stitle">Batterie MySmart</div>
+    <div class="g2" style="gap:8px;margin-bottom:8px">
+      <div class="iw">
+        <label class="lbl">Charge batt.</label>
+        <div class="ir"><input type="number" id="inp-ch-batt" min="0" step="0.01" placeholder="0.00"><span class="iu">kWh</span></div>
+      </div>
+      <div class="iw">
+        <label class="lbl">Decharge batt.</label>
+        <div class="ir"><input type="number" id="inp-de-batt" min="0" step="0.01" placeholder="0.00"><span class="iu">kWh</span></div>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="stitle">Reseau & Autoconsommation</div>
+    <div class="g2" style="gap:8px;margin-bottom:12px">
+      <div class="iw">
+        <label class="lbl">Conso reseau</label>
+        <div class="ir"><input type="number" id="inp-reseau" min="0" step="0.01" placeholder="0.00"><span class="iu">kWh</span></div>
+      </div>
+      <div class="iw">
+        <label class="lbl">Autoconsomm.</label>
+        <div class="ir"><input type="number" id="inp-auto" min="0" step="0.01" placeholder="0.00"><span class="iu">kWh</span></div>
+      </div>
+    </div>
+    <button id="btn-save-data" class="btn-save" onclick="saveData()" style="background:linear-gradient(135deg,#FFB800,#FF7A1A)">Enregistrer</button>
+  </div>
+</div>
+
+<!-- MODAL BATTERIE -->
+<div id="modal-batt" class="overlay hidden">
+  <div class="modal">
+    <div class="flex" style="justify-content:space-between;margin-bottom:18px">
+      <h2 style="font-size:1rem;font-weight:800;color:#1E293B">Operation batterie</h2>
+      <button onclick="closeModal('batt')" style="background:#F0F7FF;border:none;color:#64748B;border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:16px">x</button>
+    </div>
+    <div class="flex" style="gap:8px;margin-bottom:14px">
+      <button id="bop-ch"   onclick="setBOT('charge')"   style="flex:1;padding:10px;border-radius:10px;border:2px solid #10B981;background:#10B98118;color:#10B981;font-weight:700;cursor:pointer">Charge</button>
+      <button id="bop-de"   onclick="setBOT('decharge')" style="flex:1;padding:10px;border-radius:10px;border:2px solid #E2EAF4;background:#fff;color:#64748B;font-weight:700;cursor:pointer">Decharge</button>
+    </div>
+    <div id="batt-solde-info" style="background:#F0F7FF;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12px;font-weight:600;color:#64748B"></div>
+    <div class="iw">
+      <label class="lbl">Quantite</label>
+      <div class="ir"><input type="number" id="inp-bqty" min="0" step="0.01" placeholder="0.00"><span class="iu">kWh</span></div>
+    </div>
+    <button id="btn-save-batt" class="btn-save" onclick="saveBatt()" style="background:linear-gradient(135deg,#10B981,#059669)">Enregistrer</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIG -->
+<div id="modal-cfg" class="overlay hidden">
+  <div class="modal">
+    <div class="flex" style="justify-content:space-between;margin-bottom:18px">
+      <h2 style="font-size:1rem;font-weight:800;color:#1E293B">Configuration batterie</h2>
+      <button onclick="closeModal('cfg')" style="background:#F0F7FF;border:none;color:#64748B;border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:16px">x</button>
+    </div>
+    <div class="iw"><label class="lbl">Capacite maximale</label><div class="ir"><input type="number" id="cfg-cap" min="1" step="10"><span class="iu">kWh</span></div></div>
+    <div class="iw"><label class="lbl">Seuil alerte</label><div class="ir"><input type="number" id="cfg-alert" min="0" step="5"><span class="iu">kWh</span></div></div>
+    <div class="iw"><label class="lbl">Prix kWh achat</label><div class="ir"><input type="number" id="cfg-prix" min="0" step="0.01"><span class="iu">EUR</span></div></div>
+    <div class="iw"><label class="lbl">Tarif rachat</label><div class="ir"><input type="number" id="cfg-rachat" min="0" step="0.01"><span class="iu">EUR</span></div></div>
+    <button id="btn-save-cfg" class="btn-save" onclick="saveCfg()" style="background:linear-gradient(135deg,#FFB800,#FF7A1A)">Sauvegarder</button>
+    <div class="sep"></div>
+    <button onclick="confirmReset()" style="width:100%;padding:11px;border:2px solid #F43F5E;border-radius:14px;color:#F43F5E;font-weight:800;font-size:13px;cursor:pointer;background:#FFF1F2">Reinitialiser toutes les donnees</button>
+  </div>
+</div>
+
+<!-- MODAL PHOTO -->
+<div id="modal-photo" class="overlay hidden">
+  <div class="modal">
+    <div class="flex" style="justify-content:space-between;margin-bottom:18px">
+      <h2 style="font-size:1rem;font-weight:800;color:#1E293B">Import photo Mylight</h2>
+      <button onclick="closeModal('photo')" style="background:#F0F7FF;border:none;color:#64748B;border-radius:10px;width:32px;height:32px;cursor:pointer;font-size:16px">x</button>
+    </div>
+    <div id="photo-drop" onclick="document.getElementById('photo-input').click()"
+      style="border:2px dashed #8B5CF6;border-radius:16px;padding:24px;text-align:center;background:#8B5CF608;cursor:pointer;margin-bottom:14px">
+      <div id="photo-preview-wrap">
+        <div style="font-size:36px;margin-bottom:8px">📷</div>
+        <div style="font-weight:700;font-size:14px;color:#8B5CF6;margin-bottom:4px">Cliquez pour choisir une image</div>
+        <div style="font-size:12px;color:#64748B">Capture Mylight journaliere ou mensuelle</div>
+      </div>
+      <img id="photo-preview" style="display:none;max-width:100%;max-height:200px;border-radius:10px">
+    </div>
+    <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(this)">
+    <div id="photo-status" style="background:#F0F7FF;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#64748B;display:none"></div>
+    <div id="photo-result" style="display:none;margin-bottom:12px"></div>
+    <button id="btn-analyze" onclick="analyzePhoto()" style="display:none;width:100%;padding:13px;border:none;border-radius:14px;color:#fff;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(135deg,#8B5CF6,#7C3AED);margin-bottom:8px">Analyser avec Claude</button>
+    <button id="btn-import-photo" onclick="importPhoto()" style="display:none;width:100%;padding:13px;border:none;border-radius:14px;color:#fff;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(135deg,#10B981,#059669)">Importer ces donnees</button>
+  </div>
+</div>
+
+<script>
+// ── Constantes ─────────────────────────────────────────────────────────────────
+const SUN="#FFB800",ORANGE="#FF7A1A",SKY="#38BDF8",MINT="#10B981",GRAPE="#8B5CF6",RED="#F43F5E";
+const WHITE="#FFFFFF",TEXT="#1E293B",MUTED="#64748B",BORDER="#E2EAF4",BG="#F0F7FF";
+const MS=["Jan","Fev","Mar","Avr","Mai","Jun","Jul","Aou","Sep","Oct","Nov","Dec"];
+const ML=["Janvier","Fevrier","Mars","Avril","Mai","Juin","Juillet","Aout","Septembre","Octobre","Novembre","Decembre"];
+
+// ── Etat ───────────────────────────────────────────────────────────────────────
+let monthly  = {};
+let daily    = {};
+let battHist = [];
+let battCfg  = {capacity:500,alert:50,prix:0.18,rachat:0.13};
+let rt       = simRT();
+let view     = "dash";
+let hScope   = "monthly";
+let dataTab  = "daily";
+let bOpType  = "charge";
+let dataLoaded = false;
+let photoBase64 = null, photoMediaType = null, photoAnalyzed = null;
+
+// ── Simulation RT ──────────────────────────────────────────────────────────────
+function simRT(){
+  const h=new Date().getHours();
+  let base=0;
+  if(h>=6&&h<=20) base=Math.max(0,4.8-Math.abs(h-13)*0.42);
+  const p=parseFloat((base*(0.85+Math.random()*0.3)).toFixed(3));
+  const c=parseFloat((1.2+Math.random()*1.8).toFixed(3));
+  const b=parseFloat((Math.random()*0.8).toFixed(3));
+  return{production:p,consumption:c,battCharge:b,toGrid:parseFloat(Math.max(0,p-c-b).toFixed(3))};
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function now(){return new Date();}
+function cy(){return now().getFullYear();}
+function cm(){return now().getMonth();}
+function getSolde(){return(battHist[battHist.length-1]||{solde:0}).solde;}
+function getTotCh(){return battHist.reduce((s,d)=>s+(d.charge||0),0);}
+function getTotDe(){return battHist.reduce((s,d)=>s+(d.decharge||0),0);}
+function getMData(){return(monthly[cy()]||{})[cm()]||{};}
+function getTodayData(){return daily[now().toISOString().slice(0,10)]||{};}
+function getYProd(){return Object.values(monthly[cy()]||{}).reduce((s,m)=>s+(m.production||0),0);}
+function getSelfRate(){const m=getMData();return m.consumption>0?Math.min(100,Math.round((Math.min(m.production||0,m.consumption)/m.consumption)*100)):0;}
+function getSavM(){const m=getMData();const inj=Math.max(0,(m.production||0)-(m.consumption||0));return((Math.min(m.production||0,m.consumption||0)*battCfg.prix+inj*battCfg.rachat)).toFixed(2);}
+function getSavY(){const y=getYProd();return(y*battCfg.prix*0.68+y*battCfg.rachat*0.32).toFixed(0);}
+function isLow(){return getSolde()<battCfg.alert;}
+
+// ── Graphique ──────────────────────────────────────────────────────────────────
+function drawBar(id,series,labels,h){
+  const canvas=document.getElementById(id);if(!canvas)return;
+  const W=canvas.offsetWidth;canvas.width=W;canvas.height=h||140;
+  const ctx=canvas.getContext("2d");ctx.clearRect(0,0,W,canvas.height);
+  const allVals=series.flatMap(s=>s.values),max=Math.max(...allVals,1)*1.15;
+  const pL=32,pT=10,pB=24,cW=W-pL-8,cH=canvas.height-pT-pB;
+  ctx.strokeStyle="rgba(30,41,59,0.06)";ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=pT+cH-(i/4)*cH;ctx.beginPath();ctx.moveTo(pL,y);ctx.lineTo(pL+cW,y);ctx.stroke();
+    ctx.fillStyle=MUTED+"88";ctx.font="9px sans-serif";ctx.textAlign="right";ctx.fillText((max*i/4).toFixed(0),pL-3,y+3);
+  }
+  const n=labels.length,gW=cW/n,bW=(gW*0.7)/series.length;
+  series.forEach((s,si)=>s.values.forEach((val,i)=>{
+    const bH=(val/max)*cH,x=pL+i*gW+si*bW+gW*0.05,y=pT+cH-bH;
+    const grad=ctx.createLinearGradient(0,y,0,pT+cH);grad.addColorStop(0,s.color);grad.addColorStop(1,s.color+"44");
+    ctx.fillStyle=grad;ctx.beginPath();ctx.roundRect(x,y,bW*0.85,bH,[3,3,0,0]);ctx.fill();
+  }));
+  ctx.fillStyle=MUTED+"99";ctx.font="9px sans-serif";ctx.textAlign="center";
+  labels.forEach((lbl,i)=>{if(lbl)ctx.fillText(lbl,pL+i*gW+gW/2,canvas.height-5);});
+}
+
+// ── Jauge batterie ─────────────────────────────────────────────────────────────
+function renderGauge(id){
+  const pct=Math.min(100,(getSolde()/battCfg.capacity)*100);
+  const color=pct<(battCfg.alert/battCfg.capacity)*100?RED:pct<40?SUN:MINT;
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;gap:8px">'
+    +'<div style="position:relative;width:44px;height:90px">'
+    +'<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:18px;height:5px;background:'+BORDER+';border-radius:3px 3px 0 0"></div>'
+    +'<div style="position:absolute;top:5px;left:0;right:0;bottom:0;border:2px solid '+color+'55;border-radius:8px;overflow:hidden;background:'+BG+'">'
+    +'<div style="position:absolute;bottom:0;left:0;right:0;height:'+pct+'%;background:'+color+';transition:height 1s"></div>'
+    +'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">'
+    +'<span style="font-weight:800;font-size:10px;color:'+(pct>30?WHITE:color)+'">'+Math.round(pct)+'%</span>'
+    +'</div></div></div>'
+    +'<span style="font-weight:800;font-size:13px;color:'+color+'">'+getSolde().toFixed(1)+' kWh</span>'
+    +'</div>';
+}
+
+function kpi(label,value,color){
+  return '<div style="background:rgba(255,255,255,0.7);border-radius:10px;padding:9px 11px">'
+    +'<div style="font-size:9px;font-weight:700;color:'+MUTED+';text-transform:uppercase;margin-bottom:4px">'+label+'</div>'
+    +'<div style="font-weight:800;font-size:13px;color:'+color+'">'+value+'</div></div>';
+}
+
+// ── Render principal ───────────────────────────────────────────────────────────
+function render(){
+  const tod=getTodayData(),mdat=getMData(),yProd=getYProd();
+  const selfRate=getSelfRate(),savM=getSavM(),savY=getSavY();
+  const solde=getSolde(),totCh=getTotCh(),totDe=getTotDe();
+  const econ=(totDe*battCfg.prix).toFixed(2);
+
+  document.getElementById("today-date").textContent=now().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+
+  // Alert batterie
+  const low=isLow();
+  document.getElementById("alert-bar").classList.toggle("hidden",!low);
+  document.getElementById("batt-dot").classList.toggle("hidden",!low);
+  if(low) document.getElementById("alert-text").textContent="Solde "+solde.toFixed(1)+" kWh - seuil "+battCfg.alert+" kWh";
+
+  // Nav buttons
+  const navColors={dash:SUN,history:SKY,battery:MINT};
+  ["dash","history","battery"].forEach(v=>{
+    const btn=document.getElementById("nav-"+v);
+    btn.style.background=view===v?navColors[v]:WHITE;
+    btn.style.color=view===v?WHITE:MUTED;
+  });
+
+  // RT
+  document.getElementById("rt-prod").textContent=rt.production.toFixed(3);
+  document.getElementById("rt-batt").textContent=rt.battCharge.toFixed(3)+" kW";
+  document.getElementById("rt-home").textContent=Math.min(rt.production,rt.consumption).toFixed(3)+" kW";
+  document.getElementById("rt-grid").textContent=rt.toGrid.toFixed(3)+" kW";
+
+  // Cards accueil
+  document.getElementById("d-tod-prod").innerHTML=(tod.production||0).toFixed(2)+' <span style="font-size:0.65rem;color:#38BDF888">kWh</span>';
+  document.getElementById("d-tod-sub").textContent="Conso "+(tod.consumption||0).toFixed(2)+" kWh";
+  document.getElementById("d-month-lbl").textContent=ML[cm()];
+  document.getElementById("d-month-prod").innerHTML=(mdat.production||0).toFixed(2)+' <span style="font-size:0.65rem;color:#8B5CF688">kWh</span>';
+  document.getElementById("d-month-sub").textContent="Conso "+(mdat.consumption||0).toFixed(2)+" kWh";
+
+  // Detail Mylight aujourd'hui
+  document.getElementById("d-mylight-today").innerHTML=
+    kpi("Charge Batt.",(tod.chargeBatt||0).toFixed(2)+" kWh",MINT)+
+    kpi("Decharge Batt.",(tod.dechargeBatt||0).toFixed(2)+" kWh","#F97316")+
+    kpi("Conso Reseau",(tod.reseau||0).toFixed(2)+" kWh",SKY)+
+    kpi("Autoconso",(tod.autoconso||0).toFixed(2)+" kWh",GRAPE);
+
+  // Batterie mini
+  renderGauge("batt-gauge-dash");
+  document.getElementById("batt-mini-ch").textContent=totCh.toFixed(1)+" kWh";
+  document.getElementById("batt-mini-ec").textContent=econ+" EUR";
+
+  // KPIs
+  document.getElementById("d-self").innerHTML=selfRate+'<span style="font-size:0.8rem;color:#10B98188">%</span>';
+  document.getElementById("self-bar").style.width=selfRate+"%";
+  document.getElementById("d-savm").innerHTML=savM+' <span style="font-size:0.65rem">EUR/mois</span>';
+  document.getElementById("d-savy").textContent=savY+" EUR/an";
+
+  // CO2
+  document.getElementById("co2-txt").textContent=(yProd*0.415).toFixed(0)+" kg CO2 evites cette annee";
+  document.getElementById("co2-sub").textContent="Equivalent a "+Math.round(yProd*0.415/0.21)+" km en voiture";
+
+  // Chart 30 jours
+  const l30data=getLast30();
+  setTimeout(()=>drawBar("chart-30",[{values:l30data.prod,color:SUN},{values:l30data.cons,color:SKY}],l30data.labels,140),0);
+
+  // Historique mensuel
+  document.getElementById("h-month-lbl").textContent=cy()+" - production mensuelle";
+  const mChart={
+    prod:Array.from({length:12},(_,m)=>(monthly[cy()]||{})[m]?.production||0),
+    cons:Array.from({length:12},(_,m)=>(monthly[cy()]||{})[m]?.consumption||0),
+  };
+  setTimeout(()=>drawBar("chart-monthly",[{values:mChart.prod,color:SUN},{values:mChart.cons,color:SKY}],MS,150),0);
+
+  // Table mensuelle
+  let mHTML="";
+  const gs6="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr";
+  MS.forEach((m,i)=>{
+    const d=(monthly[cy()]||{})[i];
+    if(!d){
+      mHTML+="<div style='"+gs6+"'><div class='td' style='color:"+MUTED+"'>"+m+"</div>"+"<div class='td' style='color:"+BORDER+"'>-</div>".repeat(5)+"</div>";
+    } else {
+      const bal=((d.production||0)-(d.consumption||0));
+      const balColor=bal>=0?MINT:RED;
+      const balStr=(bal>=0?"+":"")+bal.toFixed(2);
+      mHTML+="<div style='"+gs6+";cursor:pointer' onclick='editMonthly("+cy()+","+i+")' title='Cliquer pour modifier'>"
+        +"<div class='td' style='color:"+TEXT+";font-weight:700'>"+m+"</div>"
+        +"<div class='td' style='color:"+SUN+"'>"+(d.production||0).toFixed(2)+"</div>"
+        +"<div class='td' style='color:"+SKY+"'>"+(d.consumption||0).toFixed(2)+"</div>"
+        +"<div class='td' style='color:"+MINT+"'>"+(d.chargeBatt||0).toFixed(2)+"</div>"
+        +"<div class='td' style='color:#F97316'>"+(d.dechargeBatt||0).toFixed(2)+"</div>"
+        +"<div class='td' style='color:"+balColor+"'>"+balStr+"</div>"
+        +"</div>";
+    }
+  });
+  document.getElementById("monthly-table").innerHTML=mHTML;
+
+  // Vue batterie
+  renderGauge("batt-gauge-main");
+  document.getElementById("batt-details").innerHTML=
+    kpi("Solde",solde.toFixed(2)+" kWh",MINT)+
+    kpi("Capacite",battCfg.capacity+" kWh",TEXT)+
+    kpi("Alerte",battCfg.alert+" kWh",RED)+
+    kpi("Total charge",totCh.toFixed(2)+" kWh",SKY);
+  document.getElementById("batt-econ").innerHTML=
+    kpi("Energie utilisee",totDe.toFixed(2)+" kWh",MINT)+
+    kpi("Economies",econ+" EUR",SUN)+
+    kpi("Gain rachat",(totCh*battCfg.rachat).toFixed(2)+" EUR",ORANGE);
+
+  const b30=battHist.slice(-30);
+  const bLab=b30.map((_,i)=>i%7===0?(i===0?"J-29":i===29?"Auj":"J-"+(29-i)):"");
+  setTimeout(()=>drawBar("chart-batt",[{values:b30.map(d=>d.charge||0),color:MINT},{values:b30.map(d=>d.decharge||0),color:RED}],bLab,110),0);
+}
+
+function getLast30(){
+  const prod=[],cons=[],labels=[];
+  for(let d=29;d>=0;d--){
+    const dt=new Date(now());dt.setDate(dt.getDate()-d);
+    const k=dt.toISOString().slice(0,10);
+    prod.push((daily[k]||{}).production||0);
+    cons.push((daily[k]||{}).consumption||0);
+    labels.push(d%7===0?(d===0?"Auj":"J-"+d):"");
+  }
+  return{prod,cons,labels};
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────────
+function setView(v){
+  view=v;
+  ["dash","history","battery"].forEach(n=>document.getElementById("view-"+n).classList.toggle("hidden",n!==v));
+  render();
+  if(v==="history") setHS(hScope);
+}
+
+function setHS(s){
+  hScope=s;
+  ["monthly","daily","yearly"].forEach(n=>{
+    document.getElementById("hs-"+n).classList.toggle("hidden",n!==s);
+    const btn=document.getElementById("pill-"+n);
+    if(btn){btn.style.background=s===n?GRAPE+"18":"transparent";btn.style.color=s===n?GRAPE:MUTED;btn.style.borderColor=s===n?GRAPE:BORDER;}
+  });
+  if(s==="daily") initDailySelectors();
+  if(s==="yearly") renderYearly();
+}
+
+function initDailySelectors(){
+  const mSel=document.getElementById("daily-month-sel");
+  const ySel=document.getElementById("daily-year-sel");
+  if(!mSel||!ySel) return;
+  const curM=mSel.value!==""?parseInt(mSel.value):cm();
+  const curY=ySel.value!==""?parseInt(ySel.value):cy();
+  mSel.innerHTML=MS.map((m,i)=>"<option value='"+i+"'"+(i===curM?" selected":"")+">"+m+"</option>").join("");
+  ySel.innerHTML=[cy()-2,cy()-1,cy()].map(y=>"<option value='"+y+"'"+(y===curY?" selected":"")+">"+y+"</option>").join("");
+  renderDailyTable();
+}
+
+function renderDailyTable(){
+  const mSel=document.getElementById("daily-month-sel");
+  const ySel=document.getElementById("daily-year-sel");
+  if(!mSel||!ySel) return;
+  const selM=parseInt(mSel.value);
+  const selY=parseInt(ySel.value);
+  const mm=(selM+1)<10?"0"+(selM+1):""+(selM+1);
+  const prefix=selY+"-"+mm;
+  const filtered=Object.entries(daily).filter(([d])=>d.startsWith(prefix)).sort((a,b)=>a[0].localeCompare(b[0]));
+  const gs7="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr 1fr 1fr";
+  let html="";
+  let tP=0,tC=0,tCh=0,tDe=0,tR=0,tA=0;
+  filtered.forEach(([date,d])=>{
+    tP+=(d.production||0);tC+=(d.consumption||0);tCh+=(d.chargeBatt||0);tDe+=(d.dechargeBatt||0);tR+=(d.reseau||0);tA+=(d.autoconso||0);
+    html+="<div style='"+gs7+";cursor:pointer' onclick=\"editDaily('"+date+"')\" title='Cliquer pour modifier'>"
+      +"<div class='td' style='color:"+MUTED+";font-weight:700'>"+date.slice(8)+"</div>"
+      +"<div class='td' style='color:"+SUN+"'>"+(d.production||0).toFixed(2)+"</div>"
+      +"<div class='td' style='color:"+SKY+"'>"+(d.consumption||0).toFixed(2)+"</div>"
+      +"<div class='td' style='color:"+MINT+"'>"+(d.chargeBatt||0).toFixed(2)+"</div>"
+      +"<div class='td' style='color:#F97316'>"+(d.dechargeBatt||0).toFixed(2)+"</div>"
+      +"<div class='td' style='color:"+MUTED+"'>"+(d.reseau||0).toFixed(2)+"</div>"
+      +"<div class='td' style='color:"+GRAPE+"'>"+(d.autoconso||0).toFixed(2)+"</div>"
+      +"</div>";
+  });
+  if(filtered.length>0){
+    html+="<div style='"+gs7+";background:"+BG+";font-weight:800'>"
+      +"<div class='td' style='color:"+TEXT+"'>TOTAL</div>"
+      +"<div class='td' style='color:"+SUN+"'>"+tP.toFixed(2)+"</div>"
+      +"<div class='td' style='color:"+SKY+"'>"+tC.toFixed(2)+"</div>"
+      +"<div class='td' style='color:"+MINT+"'>"+tCh.toFixed(2)+"</div>"
+      +"<div class='td' style='color:#F97316'>"+tDe.toFixed(2)+"</div>"
+      +"<div class='td' style='color:"+MUTED+"'>"+tR.toFixed(2)+"</div>"
+      +"<div class='td' style='color:"+GRAPE+"'>"+tA.toFixed(2)+"</div>"
+      +"</div>";
+  }
+  const el=document.getElementById("daily-table");
+  if(el) el.innerHTML=html||"<div style='padding:14px;text-align:center;color:"+MUTED+";font-size:12px'>Aucune donnee pour ce mois</div>";
+}
+
+function renderYearly(){
+  const el=document.getElementById("hs-yearly");if(!el)return;
+  let html="";
+  [cy()-1,cy()].forEach(y=>{
+    if(!monthly[y]||Object.keys(monthly[y]).length===0) return;
+    const yp=Object.values(monthly[y]).reduce((s,m)=>s+(m.production||0),0);
+    const yc=Object.values(monthly[y]).reduce((s,m)=>s+(m.consumption||0),0);
+    const ych=Object.values(monthly[y]).reduce((s,m)=>s+(m.chargeBatt||0),0);
+    const isCY=y===cy();
+    html+="<div class='card"+(isCY?" shadow":"")+"' style='border-color:"+(isCY?SUN+"33":BORDER)+";margin-bottom:12px'>"
+      +"<div class='flex' style='justify-content:space-between;align-items:center;margin-bottom:14px'>"
+      +"<span style='font-weight:800;font-size:1.2rem;color:"+(isCY?SUN:TEXT)+"'>"+y+"</span>"
+      +(isCY?"<span style='font-size:10px;background:linear-gradient(135deg,"+SUN+","+ORANGE+");color:#fff;padding:4px 10px;border-radius:99px;font-weight:700'>En cours</span>":"")
+      +"</div><div class='g2' style='gap:8px'>"
+      +kpi("Production",yp.toFixed(2)+" kWh",SUN)
+      +kpi("Consommation",yc.toFixed(2)+" kWh",SKY)
+      +kpi("Charge Batt.",ych.toFixed(2)+" kWh",MINT)
+      +kpi("Economies",(yp*0.18*0.68+yp*0.32*0.13).toFixed(2)+" EUR","#059669")
+      +"</div></div>";
+  });
+  el.innerHTML=html||"<div style='padding:18px;text-align:center;color:"+MUTED+";font-size:12px'>Aucune donnee annuelle</div>";
+}
+
+// ── Modals ─────────────────────────────────────────────────────────────────────
+function openModal(m){
+  if(m==="data"){
+    const mSel=document.getElementById("inp-month");
+    mSel.innerHTML=MS.map((n,i)=>"<option value='"+i+"'>"+n+"</option>").join("");
+    mSel.value=cm();
+    const ySel=document.getElementById("inp-year");
+    ySel.innerHTML=[cy()-2,cy()-1,cy()].map(y=>"<option value='"+y+"'>"+y+"</option>").join("");
+    ySel.value=cy();
+    document.getElementById("inp-date").value=now().toISOString().slice(0,10);
+    ["inp-prod","inp-cons","inp-ch-batt","inp-de-batt","inp-reseau","inp-auto"].forEach(id=>document.getElementById(id).value="");
+    setTab("daily");
+  }
+  if(m==="batt"){
+    document.getElementById("batt-solde-info").innerHTML="Solde actuel : <span style='color:"+MINT+";font-weight:800'>"+getSolde().toFixed(2)+" kWh</span> / "+battCfg.capacity+" kWh";
+    document.getElementById("inp-bqty").value="";
+  }
+  if(m==="cfg"){
+    document.getElementById("cfg-cap").value=battCfg.capacity;
+    document.getElementById("cfg-alert").value=battCfg.alert;
+    document.getElementById("cfg-prix").value=battCfg.prix;
+    document.getElementById("cfg-rachat").value=battCfg.rachat;
+  }
+  document.getElementById("modal-"+m).classList.remove("hidden");
+}
+
+function closeModal(m){
+  document.getElementById("modal-"+m).classList.add("hidden");
+  if(m==="photo"){
+    photoBase64=null;photoAnalyzed=null;
+    document.getElementById("photo-preview").style.display="none";
+    document.getElementById("photo-preview-wrap").style.display="block";
+    document.getElementById("btn-analyze").style.display="none";
+    document.getElementById("photo-result").style.display="none";
+    document.getElementById("btn-import-photo").style.display="none";
+    document.getElementById("photo-status").style.display="none";
+    document.getElementById("photo-input").value="";
+  }
+}
+
+function setTab(t){
+  dataTab=t;
+  document.getElementById("inp-date-wrap").classList.toggle("hidden",t!=="daily");
+  document.getElementById("inp-month-wrap").classList.toggle("hidden",t!=="monthly");
+  ["daily","monthly"].forEach(x=>{
+    const btn=document.getElementById("tab-"+x);
+    btn.style.borderColor=t===x?"#FFB800":"#E2EAF4";
+    btn.style.background=t===x?"#FFB80018":"#fff";
+    btn.style.color=t===x?"#FFB800":"#64748B";
+  });
+}
+
+// ── Edition ────────────────────────────────────────────────────────────────────
+function editDaily(date){
+  const d=daily[date];
+  if(!d) return;
+  setTab("daily");
+  openModal("data");
+  document.getElementById("inp-date").value=date;
+  document.getElementById("inp-prod").value=(d.production||0).toFixed(2);
+  document.getElementById("inp-cons").value=(d.consumption||0).toFixed(2);
+  document.getElementById("inp-ch-batt").value=(d.chargeBatt||0).toFixed(2);
+  document.getElementById("inp-de-batt").value=(d.dechargeBatt||0).toFixed(2);
+  document.getElementById("inp-reseau").value=(d.reseau||0).toFixed(2);
+  document.getElementById("inp-auto").value=(d.autoconso||0).toFixed(2);
+}
+
+function editMonthly(y,m){
+  const d=(monthly[y]||{})[m];
+  if(!d) return;
+  setTab("monthly");
+  openModal("data");
+  const mSel=document.getElementById("inp-month");
+  const ySel=document.getElementById("inp-year");
+  mSel.innerHTML=MS.map((mn,i)=>"<option value='"+i+"'"+(i==m?" selected":"")+">"+mn+"</option>").join("");
+  ySel.innerHTML=[cy()-2,cy()-1,cy()].map(yr=>"<option value='"+yr+"'"+(yr==y?" selected":"")+">"+yr+"</option>").join("");
+  document.getElementById("inp-prod").value=(d.production||0).toFixed(2);
+  document.getElementById("inp-cons").value=(d.consumption||0).toFixed(2);
+  document.getElementById("inp-ch-batt").value=(d.chargeBatt||0).toFixed(2);
+  document.getElementById("inp-de-batt").value=(d.dechargeBatt||0).toFixed(2);
+  document.getElementById("inp-reseau").value=(d.reseau||0).toFixed(2);
+  document.getElementById("inp-auto").value=(d.autoconso||0).toFixed(2);
+}
+
+// ── Sauvegarde ─────────────────────────────────────────────────────────────────
+function getVal(id){return parseFloat(document.getElementById(id).value)||0;}
+
+function updateBattHist(date,chBatt,deBatt){
+  if(chBatt===0&&deBatt===0) return;
+  const existing=battHist.findIndex(d=>d.date===date);
+  const lastSolde=battHist.length>0?battHist[battHist.length-1].solde:0;
+  const ns=Math.max(0,Math.min(battCfg.capacity,lastSolde+chBatt-deBatt));
+  const entry={date,charge:chBatt,decharge:deBatt,solde:parseFloat(ns.toFixed(2))};
+  if(existing>=0) battHist[existing]=entry;
+  else battHist.push(entry);
+  battHist.sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function saveData(){
+  const prod=getVal("inp-prod"),cons=getVal("inp-cons");
+  const chBatt=getVal("inp-ch-batt"),deBatt=getVal("inp-de-batt");
+  const reseau=getVal("inp-reseau"),auto=getVal("inp-auto");
+  const entry={production:prod,consumption:cons,chargeBatt:chBatt,dechargeBatt:deBatt,reseau,autoconso:auto};
+
+  if(dataTab==="daily"){
+    const date=document.getElementById("inp-date").value;
+    if(!date) return;
+    daily[date]=entry;
+    updateBattHist(date,chBatt,deBatt);
+  } else {
+    const m=parseInt(document.getElementById("inp-month").value);
+    const y=parseInt(document.getElementById("inp-year").value);
+    if(!monthly[y]) monthly[y]={};
+    monthly[y][m]=entry;
+    const mm=(m+1)<10?"0"+(m+1):""+(m+1);
+    updateBattHist(y+"-"+mm+"-01",chBatt,deBatt);
+  }
+
+  const btn=document.getElementById("btn-save-data");
+  btn.textContent="Enregistre !";btn.style.background="linear-gradient(135deg,"+MINT+",#059669)";
+  saveToGitHub();
+  setTimeout(()=>{btn.textContent="Enregistrer";btn.style.background="linear-gradient(135deg,#FFB800,#FF7A1A)";closeModal("data");render();if(hScope==="daily")renderDailyTable();},1000);
+}
+
+function setBOT(t){
+  bOpType=t;
+  const cb=document.getElementById("bop-ch"),db=document.getElementById("bop-de");
+  cb.style.borderColor=t==="charge"?MINT:BORDER;cb.style.background=t==="charge"?MINT+"18":WHITE;cb.style.color=t==="charge"?MINT:MUTED;
+  db.style.borderColor=t==="decharge"?RED:BORDER;db.style.background=t==="decharge"?RED+"18":WHITE;db.style.color=t==="decharge"?RED:MUTED;
+}
+
+function saveBatt(){
+  const qty=parseFloat(document.getElementById("inp-bqty").value);
+  if(isNaN(qty)||qty<=0) return;
+  const last=battHist[battHist.length-1]||{solde:0};
+  const ns=bOpType==="charge"?Math.min(battCfg.capacity,last.solde+qty):Math.max(0,last.solde-qty);
+  battHist.push({date:now().toISOString().slice(0,10),charge:bOpType==="charge"?qty:0,decharge:bOpType==="decharge"?qty:0,solde:parseFloat(ns.toFixed(2))});
+  const btn=document.getElementById("btn-save-batt");
+  btn.textContent="Enregistre !";
+  saveToGitHub();
+  setTimeout(()=>{btn.textContent="Enregistrer";closeModal("batt");render();},1000);
+}
+
+function saveCfg(){
+  battCfg={capacity:parseFloat(document.getElementById("cfg-cap").value),alert:parseFloat(document.getElementById("cfg-alert").value),prix:parseFloat(document.getElementById("cfg-prix").value),rachat:parseFloat(document.getElementById("cfg-rachat").value)};
+  const btn=document.getElementById("btn-save-cfg");
+  btn.textContent="Sauvegarde !";
+  saveToGitHub();
+  setTimeout(()=>{btn.textContent="Sauvegarder";closeModal("cfg");render();},1000);
+}
+
+function confirmReset(){
+  if(!confirm("Attention ! Toutes vos donnees seront effacees. Continuer ?")) return;
+  if(!confirm("Derniere confirmation : effacer toutes les donnees ?")) return;
+  monthly={};daily={};battHist=[];battCfg={capacity:500,alert:50,prix:0.18,rachat:0.13};
+  saveToGitHub();closeModal("cfg");render();alert("Donnees reinitialisees !");
+}
+
+// ── GitHub Sync ────────────────────────────────────────────────────────────────
+async function loadFromGitHub(){
+  const st=document.getElementById("sync-status");
+  if(st) st.textContent="Chargement...";
+  try {
+    const r=await fetch("/api/getData");
+    const j=await r.json();
+    if(j.success&&j.data){
+      if(j.data.monthly) monthly=j.data.monthly;
+      if(j.data.daily) daily=j.data.daily;
+      if(j.data.battHist) battHist=j.data.battHist;
+      if(j.data.battCfg) battCfg=j.data.battCfg;
+      if(st) st.textContent="Synchronise";
+    } else {
+      if(st) st.textContent="";
+    }
+  } catch(e){
+    if(st) st.textContent="";
+  }
+  dataLoaded=true;
+  render();
+}
+
+async function saveToGitHub(){
+  if(!dataLoaded) return;
+  const data={monthly,daily,battHist,battCfg,updated:new Date().toISOString()};
+  try {
+    await fetch("/api/saveData",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});
+  } catch(e){console.error("Save error:",e);}
+}
+
+// ── Export ─────────────────────────────────────────────────────────────────────
+function exportExcel(){
+  let csv="\uFEFFDONNEES MENSUELLES\n";
+  csv+="Annee,Mois,Production,Consommation,Charge Batt,Decharge Batt,Reseau,Autoconso,Bilan\n";
+  [cy()-1,cy()].forEach(y=>{
+    if(!monthly[y]) return;
+    Object.entries(monthly[y]).forEach(([m,d])=>{
+      const bal=((d.production||0)-(d.consumption||0)).toFixed(2);
+      csv+=y+","+ML[m]+","+(d.production||0).toFixed(2)+","+(d.consumption||0).toFixed(2)+","+(d.chargeBatt||0).toFixed(2)+","+(d.dechargeBatt||0).toFixed(2)+","+(d.reseau||0).toFixed(2)+","+(d.autoconso||0).toFixed(2)+","+bal+"\n";
+    });
+  });
+  csv+="\nDONNEES JOURNALIERES\n";
+  csv+="Date,Production,Consommation,Charge Batt,Decharge Batt,Reseau,Autoconso\n";
+  Object.entries(daily).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([date,d])=>{
+    csv+=date+","+(d.production||0).toFixed(2)+","+(d.consumption||0).toFixed(2)+","+(d.chargeBatt||0).toFixed(2)+","+(d.dechargeBatt||0).toFixed(2)+","+(d.reseau||0).toFixed(2)+","+(d.autoconso||0).toFixed(2)+"\n";
+  });
+  csv+="\nHISTORIQUE BATTERIE\n";
+  csv+="Date,Charge,Decharge,Solde\n";
+  battHist.forEach(d=>{csv+=d.date+","+(d.charge||0).toFixed(2)+","+(d.decharge||0).toFixed(2)+","+(d.solde||0).toFixed(2)+"\n";});
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="SolarHome_"+now().toISOString().slice(0,10)+".csv";a.click();URL.revokeObjectURL(url);
+}
+
+function exportPDF(){
+  const yProd=getYProd();
+  const ycons=Object.values(monthly[cy()]||{}).reduce((s,m)=>s+(m.consumption||0),0);
+  let mRows="",dRows="";
+  MS.forEach((m,i)=>{
+    const d=(monthly[cy()]||{})[i];
+    if(!d){mRows+="<tr><td>"+m+"</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>";return;}
+    const bal=((d.production||0)-(d.consumption||0));
+    mRows+="<tr><td>"+m+"</td><td style='color:#FFB800'>"+(d.production||0).toFixed(2)+"</td><td style='color:#38BDF8'>"+(d.consumption||0).toFixed(2)+"</td><td style='color:#10B981'>"+(d.chargeBatt||0).toFixed(2)+"</td><td style='color:#F97316'>"+(d.dechargeBatt||0).toFixed(2)+"</td><td style='color:"+(bal>=0?"#10B981":"#F43F5E")+"'>"+(bal>=0?"+":"")+bal.toFixed(2)+"</td></tr>";
+  });
+  Object.entries(daily).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,31).forEach(([date,d])=>{
+    dRows+="<tr><td>"+date+"</td><td style='color:#FFB800'>"+(d.production||0).toFixed(2)+"</td><td style='color:#38BDF8'>"+(d.consumption||0).toFixed(2)+"</td><td style='color:#10B981'>"+(d.chargeBatt||0).toFixed(2)+"</td><td style='color:#F97316'>"+(d.dechargeBatt||0).toFixed(2)+"</td><td style='color:#64748B'>"+(d.reseau||0).toFixed(2)+"</td><td style='color:#8B5CF6'>"+(d.autoconso||0).toFixed(2)+"</td></tr>";
+  });
+  const html="<!DOCTYPE html><html><head><meta charset='UTF-8'><title>SolarHome Rapport</title>"
+    +"<style>body{font-family:sans-serif;color:#1E293B;margin:40px}h1{color:#FFB800}h2{color:#1E293B;border-bottom:2px solid #FFB800;padding-bottom:4px;margin-top:30px}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0}.kpi{background:#F0F7FF;border-radius:12px;padding:16px;text-align:center}.kpi .val{font-size:22px;font-weight:800;color:#FFB800}.kpi .lbl{font-size:11px;color:#64748B;margin-top:4px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#F0F7FF;padding:8px;text-align:left;font-size:11px;color:#64748B;text-transform:uppercase}td{padding:7px 8px;border-bottom:1px solid #E2EAF4;font-size:12px}</style></head>"
+    +"<body><h1>SolarHome - Rapport "+cy()+"</h1>"
+    +"<div style='color:#64748B;font-size:12px;margin-bottom:20px'>"+now().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})+"</div>"
+    +"<div class='kpis'>"
+    +"<div class='kpi'><div class='val'>"+yProd.toFixed(1)+" kWh</div><div class='lbl'>Production "+cy()+"</div></div>"
+    +"<div class='kpi'><div class='val'>"+ycons.toFixed(1)+" kWh</div><div class='lbl'>Consommation "+cy()+"</div></div>"
+    +"<div class='kpi'><div class='val'>"+(yProd*0.415).toFixed(0)+" kg</div><div class='lbl'>CO2 evite</div></div>"
+    +"<div class='kpi'><div class='val'>"+getSavY()+" EUR</div><div class='lbl'>Economies "+cy()+"</div></div>"
+    +"</div>"
+    +"<h2>Production mensuelle "+cy()+"</h2>"
+    +"<table><tr><th>Mois</th><th>Production</th><th>Consommation</th><th>Ch.Batt</th><th>De.Batt</th><th>Bilan</th></tr>"+mRows+"</table>"
+    +"<h2>Donnees journalieres (30 derniers jours)</h2>"
+    +"<table><tr><th>Date</th><th>Production</th><th>Consommation</th><th>Ch.Batt</th><th>De.Batt</th><th>Reseau</th><th>Autoconso</th></tr>"+dRows+"</table>"
+    +"<div style='margin-top:40px;font-size:11px;color:#64748B;text-align:center'>SolarHome - mes-panneaux-solaires-j452.vercel.app</div>"
+    +"<scr"+"ipt>window.onload=()=>window.print();</scr"+"ipt></body></html>";
+  const blob=new Blob([html],{type:"text/html"});
+  const url=URL.createObjectURL(blob);
+  window.open(url,"_blank");
+}
+
+// ── Import Photo ───────────────────────────────────────────────────────────────
+function handlePhoto(input){
+  const file=input.files[0];if(!file)return;
+  photoMediaType=file.type||"image/jpeg";
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const url=e.target.result;
+    photoBase64=url.split(",")[1];
+    document.getElementById("photo-preview").src=url;
+    document.getElementById("photo-preview").style.display="block";
+    document.getElementById("photo-preview-wrap").style.display="none";
+    document.getElementById("btn-analyze").style.display="block";
+    document.getElementById("photo-result").style.display="none";
+    document.getElementById("btn-import-photo").style.display="none";
+    photoAnalyzed=null;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzePhoto(){
+  if(!photoBase64) return;
+  const btn=document.getElementById("btn-analyze");
+  const status=document.getElementById("photo-status");
+  btn.textContent="Analyse en cours...";btn.disabled=true;
+  status.style.display="block";status.style.background="#F0F7FF";status.style.color="#64748B";
+  status.textContent="Claude analyse votre capture Mylight...";
+  try {
+    const resp=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({imageBase64:photoBase64,mediaType:photoMediaType})});
+    const json=await resp.json();
+    if(!json.success) throw new Error(json.error);
+    photoAnalyzed=json.data;
+    status.style.background="#ECFDF5";status.style.color="#10B981";
+    status.textContent="Analyse reussie ! Verifiez les donnees.";
+    const d=json.data;
+    const label=d.type==="journalier"?(d.date||"Date inconnue"):(ML[(d.mois||1)-1]+" "+(d.annee||cy()));
+    const resultHTML="<div style='background:#fff;border-radius:14px;padding:14px;border:1.5px solid #E2EAF4'>"
+      +"<div style='font-weight:700;font-size:13px;color:#1E293B;margin-bottom:10px'>"+label+" — "+(d.source||"Mylight")+"</div>"
+      +"<div style='display:grid;grid-template-columns:1fr 1fr;gap:6px'>"
+      +["Production","Consommation","Charge batt.","Decharge batt.","Conso reseau","Autoconso"].map((lbl,i)=>{
+        const vals=[d.production,d.consumption,d.chargeBatt,d.dechargeBatt,d.reseau,d.autoconso];
+        const colors=["#FFB800","#38BDF8","#10B981","#F97316","#64748B","#8B5CF6"];
+        return "<div style='background:#F0F7FF;border-radius:8px;padding:7px 10px'>"
+          +"<div style='font-size:9px;font-weight:700;color:#64748B;text-transform:uppercase;margin-bottom:2px'>"+lbl+"</div>"
+          +"<div style='font-weight:800;font-size:13px;color:"+colors[i]+"'>"+(vals[i]!=null?vals[i]+" kWh":"-")+"</div></div>";
+      }).join("")
+      +"</div>"+(d.notes?"<div style='font-size:11px;color:#64748B;margin-top:8px'>"+d.notes+"</div>":"")+"</div>";
+    document.getElementById("photo-result").innerHTML=resultHTML;
+    document.getElementById("photo-result").style.display="block";
+    document.getElementById("btn-import-photo").style.display="block";
+  } catch(e){
+    status.style.background="#FFF1F2";status.style.color="#F43F5E";
+    status.textContent="Erreur : "+e.message;
+  }
+  btn.textContent="Analyser avec Claude";btn.disabled=false;
+}
+
+function importPhoto(){
+  if(!photoAnalyzed) return;
+  const d=photoAnalyzed;
+  const entry={production:d.production||0,consumption:d.consumption||0,chargeBatt:d.chargeBatt||0,dechargeBatt:d.dechargeBatt||0,reseau:d.reseau||0,autoconso:d.autoconso||0};
+  if(d.type==="journalier"&&d.date){
+    daily[d.date]=entry;
+    updateBattHist(d.date,entry.chargeBatt,entry.dechargeBatt);
+  } else if(d.mois&&d.annee){
+    if(!monthly[d.annee]) monthly[d.annee]={};
+    monthly[d.annee][d.mois-1]=entry;
+    const mm=d.mois<10?"0"+d.mois:""+d.mois;
+    updateBattHist(d.annee+"-"+mm+"-01",entry.chargeBatt,entry.dechargeBatt);
+  }
+  const btn=document.getElementById("btn-import-photo");
+  btn.textContent="Importe !";btn.style.background="#10B981";
+  saveToGitHub();
+  setTimeout(()=>{closeModal("photo");render();},1200);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+document.getElementById("view-history").classList.add("hidden");
+document.getElementById("view-battery").classList.add("hidden");
+setInterval(()=>{rt=simRT();render();},300000);
+loadFromGitHub();
+</script>
+</body>
+</html>
