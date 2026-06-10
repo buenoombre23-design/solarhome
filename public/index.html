@@ -856,8 +856,10 @@ function saveCfg(){
 }
 
 function confirmReset(){
+  const pwd=prompt("Mot de passe pour reinitialiser :");
+  if(pwd===null) return;
+  if(pwd!=="6325"){alert("Mot de passe incorrect !");return;}
   if(!confirm("Attention ! Toutes vos donnees seront effacees. Continuer ?")) return;
-  if(!confirm("Derniere confirmation : effacer toutes les donnees ?")) return;
   monthly={};daily={};battHist=[];battCfg={capacity:500,alert:50,prix:0.18,rachat:0.13};
   saveToGitHub();closeModal("cfg");render();alert("Donnees reinitialisees !");
 }
