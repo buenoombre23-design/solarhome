@@ -188,7 +188,10 @@ input[type=number]{-moz-appearance:textfield}
       <canvas id="chart-monthly" style="width:100%;display:block" height="150"></canvas>
     </div>
     <div class="card">
-      <div style="font-weight:700;font-size:13px;color:#1E293B;margin-bottom:12px">Detail mensuel (cliquer pour modifier)</div>
+      <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-weight:700;font-size:13px;color:#1E293B">Detail mensuel (cliquer pour modifier)</div>
+        <div class="ir" style="width:100px"><select id="monthly-year-sel" onchange="renderMonthlyTable()" style="flex:1;background:transparent;border:none;color:#1E293B;padding:6px 10px;font-size:13px;outline:none"></select></div>
+      </div>
       <div style="border-radius:12px;overflow:hidden;border:1.5px solid #E2EAF4">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;background:#F0F7FF">
           <div class="th">Mois</div><div class="th">Prod.</div><div class="th">Conso.</div><div class="th">Ch.Batt</div><div class="th">De.Batt</div><div class="th">Bilan</div>
@@ -615,6 +618,7 @@ function setHS(s){
     if(btn){btn.style.background=s===n?GRAPE+"18":"transparent";btn.style.color=s===n?GRAPE:MUTED;btn.style.borderColor=s===n?GRAPE:BORDER;}
   });
   if(s==="daily") initDailySelectors();
+  if(s==="monthly") {initMonthlyYearSel();renderMonthlyTable();}
   if(s==="yearly") renderYearly();
 }
 
@@ -1011,6 +1015,59 @@ function importPhoto(){
   btn.textContent="Importe !";btn.style.background="#10B981";
   saveToGitHub();
   setTimeout(()=>{closeModal("photo");render();},1200);
+}
+
+// ── Monthly Table ─────────────────────────────────────────────────────────────
+function initMonthlyYearSel(){
+  const sel=document.getElementById("monthly-year-sel");
+  if(!sel) return;
+  const curY=sel.value?parseInt(sel.value):cy();
+  // Get all years with data
+  const years=new Set([cy()-1,cy(),cy()-2]);
+  Object.keys(monthly).forEach(y=>years.add(parseInt(y)));
+  const sortedYears=[...years].sort((a,b)=>b-a);
+  sel.innerHTML=sortedYears.map(y=>"<option value='"+y+"'"+(y===curY?" selected":"")+">"+y+"</option>").join("");
+}
+
+function renderMonthlyTable(){
+  const sel=document.getElementById("monthly-year-sel");
+  const selY=sel?parseInt(sel.value):cy();
+  const gs6="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr";
+  let mHTML="";
+  MS.forEach((m,i)=>{
+    const d=(monthly[selY]||{})[i];
+    if(!d){
+      mHTML+="<div style='"+gs6+"'>"
+        +"<div class='td' style='color:"+MUTED+"'>"+m+"</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"<div class='td' style='color:"+BORDER+"'>-</div>"
+        +"</div>";
+    } else {
+      const bal=((d.production||0)-(d.consumption||0));
+      const balColor=bal>=0?MINT:RED;
+      const balStr=(bal>=0?"+":"")+bal.toFixed(2);
+      mHTML+="<div style='"+gs6+";cursor:pointer' onclick='editMonthly("+selY+","+i+")' title='Cliquer pour modifier'>"
+        +"<div class='td' style='color:"+TEXT+";font-weight:700'>"+m+"</div>"
+        +"<div class='td' style='color:"+SUN+"'>"+(d.production||0).toFixed(2)+"</div>"
+        +"<div class='td' style='color:"+SKY+"'>"+(d.consumption||0).toFixed(2)+"</div>"
+        +"<div class='td' style='color:"+MINT+"'>"+(d.chargeBatt||0).toFixed(2)+"</div>"
+        +"<div class='td' style='color:#F97316'>"+(d.dechargeBatt||0).toFixed(2)+"</div>"
+        +"<div class='td' style='color:"+balColor+"'>"+balStr+"</div>"
+        +"</div>";
+    }
+  });
+  const el=document.getElementById("monthly-table");
+  if(el) el.innerHTML=mHTML;
+  // Update chart
+  const mChart={
+    prod:Array.from({length:12},(_,m)=>(monthly[selY]||{})[m]?.production||0),
+    cons:Array.from({length:12},(_,m)=>(monthly[selY]||{})[m]?.consumption||0),
+  };
+  document.getElementById("h-month-lbl").textContent=selY+" - production mensuelle";
+  setTimeout(()=>drawBar("chart-monthly",[{values:mChart.prod,color:SUN},{values:mChart.cons,color:SKY}],MS,150),0);
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────────
