@@ -674,22 +674,31 @@ function renderDailyTable(){
 
 function renderYearly(){
   const el=document.getElementById("hs-yearly");if(!el)return;
+  // Get all years with data
+  const years=new Set(Object.keys(monthly).map(y=>parseInt(y)));
+  if(years.size===0){el.innerHTML="<div style='padding:18px;text-align:center;color:"+MUTED+";font-size:12px'>Aucune donnee annuelle</div>";return;}
+  const sortedYears=[...years].sort((a,b)=>b-a);
   let html="";
-  [cy()-1,cy()].forEach(y=>{
+  sortedYears.forEach(y=>{
     if(!monthly[y]||Object.keys(monthly[y]).length===0) return;
     const yp=Object.values(monthly[y]).reduce((s,m)=>s+(m.production||0),0);
     const yc=Object.values(monthly[y]).reduce((s,m)=>s+(m.consumption||0),0);
     const ych=Object.values(monthly[y]).reduce((s,m)=>s+(m.chargeBatt||0),0);
+    const yde=Object.values(monthly[y]).reduce((s,m)=>s+(m.dechargeBatt||0),0);
+    const yres=Object.values(monthly[y]).reduce((s,m)=>s+(m.reseau||0),0);
     const isCY=y===cy();
     html+="<div class='card"+(isCY?" shadow":"")+"' style='border-color:"+(isCY?SUN+"33":BORDER)+";margin-bottom:12px'>"
       +"<div class='flex' style='justify-content:space-between;align-items:center;margin-bottom:14px'>"
       +"<span style='font-weight:800;font-size:1.2rem;color:"+(isCY?SUN:TEXT)+"'>"+y+"</span>"
       +(isCY?"<span style='font-size:10px;background:linear-gradient(135deg,"+SUN+","+ORANGE+");color:#fff;padding:4px 10px;border-radius:99px;font-weight:700'>En cours</span>":"")
-      +"</div><div class='g2' style='gap:8px'>"
+      +"</div>"
+      +"<div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px'>"
       +kpi("Production",yp.toFixed(2)+" kWh",SUN)
       +kpi("Consommation",yc.toFixed(2)+" kWh",SKY)
       +kpi("Charge Batt.",ych.toFixed(2)+" kWh",MINT)
-      +kpi("Economies",(yp*0.18*0.68+yp*0.32*0.13).toFixed(2)+" EUR","#059669")
+      +kpi("Decharge Batt.",yde.toFixed(2)+" kWh","#F97316")
+      +kpi("Conso Reseau",yres.toFixed(2)+" kWh",MUTED)
+      +kpi("Economies",(yp*battCfg.prix*0.68+yp*battCfg.rachat*0.32).toFixed(2)+" EUR","#059669")
       +"</div></div>";
   });
   el.innerHTML=html||"<div style='padding:18px;text-align:center;color:"+MUTED+";font-size:12px'>Aucune donnee annuelle</div>";
