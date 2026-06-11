@@ -16,6 +16,14 @@
         "dechargeBatt": 31.5,
         "reseau": 67.5,
         "autoconso": 73.8
+      },
+      "8": {
+        "production": 314.1,
+        "consumption": 213.7,
+        "chargeBatt": 151.3,
+        "dechargeBatt": 245.7,
+        "reseau": 0,
+        "autoconso": 78
       }
     },
     "2026": {
@@ -47,6 +55,12 @@
       "solde": 94
     },
     {
+      "date": "2024-09-01",
+      "charge": 151.3,
+      "decharge": 245.7,
+      "solde": 0
+    },
+    {
       "date": "2026-06-09",
       "charge": 18.3,
       "decharge": 2.8,
@@ -59,5 +73,5 @@
     "prix": 0.18,
     "rachat": 0.13
   },
-  "updated": "2026-06-11T04:18:02.464Z"
+  "updated": "2026-06-11T04:21:18.418Z"
 }
