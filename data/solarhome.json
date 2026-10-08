@@ -1,12 +1,30 @@
 {
-  "monthly": {},
+  "monthly": {
+    "2025": {
+      "0": {
+        "production": 86.39,
+        "consumption": 883.39,
+        "chargeBatt": 19.82,
+        "dechargeBatt": 19.82,
+        "reseau": 797,
+        "autoconso": 66.58
+      }
+    }
+  },
   "daily": {},
-  "battHist": [],
+  "battHist": [
+    {
+      "date": "2025-01-01",
+      "charge": 19.82,
+      "decharge": 19.82,
+      "solde": 0
+    }
+  ],
   "battCfg": {
     "capacity": 500,
     "alert": 50,
     "prix": 0.18,
     "rachat": 0.13
   },
-  "updated": "2026-10-08T19:48:36.074Z"
+  "updated": "2026-10-08T19:50:03.381Z"
 }
