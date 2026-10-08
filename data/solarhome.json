@@ -40,6 +40,14 @@
         "dechargeBatt": 102.1,
         "reseau": 0,
         "autoconso": 121.23
+      },
+      "5": {
+        "production": 608.32,
+        "consumption": 192.21,
+        "chargeBatt": 508.09,
+        "dechargeBatt": 91.98,
+        "reseau": 0,
+        "autoconso": 100.23
       }
     }
   },
@@ -74,6 +82,12 @@
       "charge": 472.67,
       "decharge": 102.1,
       "solde": 469.58
+    },
+    {
+      "date": "2025-06-01",
+      "charge": 508.09,
+      "decharge": 91.98,
+      "solde": 885.69
     }
   ],
   "battCfg": {
@@ -82,5 +96,5 @@
     "prix": 0.18,
     "rachat": 0.13
   },
-  "updated": "2026-10-08T19:56:35.647Z"
+  "updated": "2026-10-08T19:58:41.453Z"
 }
